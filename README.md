@@ -52,6 +52,48 @@ namespace Tietokantaa
         }
     }
 
+    //Person classes
+    public class Person
+    {
+        private int personId;
+        private string name;
+        private string role;
+        private string email;
+
+        public int PersonId
+        {
+            get { return personId; }
+        }
+
+        public string Name
+        {
+            get { return name; }
+        }
+
+        public string Role
+        {
+            get { return role; }
+        }
+
+        public string Email
+        {
+            get { return email; }
+        }
+
+        public Person(int pId, string nm, string rol, string ead)
+        {
+
+            personId = pId;
+            name = nm;
+            role = rol;
+            email = ead;
+        }
+        public override string ToString()
+        {
+            return name;
+        }
+    }
+
     class DataService
     {
         private OleDbConnection myConnection;
@@ -264,6 +306,94 @@ namespace Tietokantaa
             return custList;
         }
 
+        //Person classes
+        public List<Person> GetAllPersons()
+        {
+            List<Person> personList = new List<Person>();
+        
+            string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
+            string table = "Person";
+        
+            OleDbDataReader myReader;
+            myReader = GetData(fields, table);
+        
+            bool notEoF;
+            notEoF = myReader.Read();
+        
+            while (notEoF)
+            {
+                int id = Convert.ToInt32(myReader["PersonID"].ToString());
+                string name = myReader["PersonName"].ToString();
+                string role = myReader["PersonRole"].ToString();
+                string email = myReader["Email"].ToString();
+        
+                Person newP = new Person(id, name, role, email);
+        
+                personList.Add(newP);
+        
+                notEoF = myReader.Read();
+            }
+        
+            return personList;
+        }
+        
+        public Person GetPersonByName(string personName)
+        {
+            Person newPerson = null;
+        
+            string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
+            string table = "Person";
+        
+            OleDbDataReader myReader;
+            myReader = GetDataWhereString(fields, table, "PersonName", personName);
+        
+            bool notEoF;
+            notEoF = myReader.Read();
+        
+            while (notEoF)
+            {
+                int id = Convert.ToInt32(myReader["PersonID"].ToString());
+                string name = myReader["PersonName"].ToString();
+                string role = myReader["PersonRole"].ToString();
+                string email = myReader["Email"].ToString();
+        
+                newPerson = new Person(id, name, role, email);
+        
+                break;
+            }
+        
+            return newPerson;
+        }
+        
+        public void AddPerson(int id, string name, string role, string email)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+        
+            myCommand.Connection = myConnection;
+        
+            myCommand.CommandText =
+                "INSERT INTO Person(PersonID, PersonName, PersonRole, Email) VALUES (" +
+                id + ", '" + name + "', '" + role + "', '" + email + "')";
+        
+            myCommand.CommandType = CommandType.Text;
+        
+            myCommand.ExecuteNonQuery();
+        }
+        
+        public void RemovePerson(int id)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+        
+            myCommand.Connection = myConnection;
+        
+            myCommand.CommandText =
+                "DELETE FROM Person WHERE PersonID = " + id;
+        
+            myCommand.CommandType = CommandType.Text;
+        
+            myCommand.ExecuteNonQuery();
+        }
+
     }
 
     class MyApplication
@@ -299,6 +429,26 @@ namespace Tietokantaa
             return myDataService.GetCustomerByName(custName);
         }
 
+        public List<Person> GetAllPersons()
+        {
+            return myDataService.GetAllPersons();
+        }
+        
+        public Person GetPersonDataByName(string personName)
+        {
+            return myDataService.GetPersonByName(personName);
+        }
+        
+        public void AddPerson(int id, string name, string role, string email)
+        {
+            myDataService.AddPerson(id, name, role, email);
+        }
+        
+        public void RemovePersonById(int id)
+        {
+            myDataService.RemovePerson(id);
+        }
+
     }
 
 
@@ -311,6 +461,13 @@ namespace Tietokantaa
             Console.WriteLine("In this app you can (select with number):");
             Console.WriteLine("1. show all customers");
             Console.WriteLine("2. show data of one customer only");
+
+            //Person menu
+            Console.WriteLine("3. show all persons");
+            Console.WriteLine("4. show data of one person only (by name)");
+            Console.WriteLine("5. add person");
+            Console.WriteLine("6. remove person (by id)");
+            
             Console.WriteLine("exit (to finish)");
         }
 
@@ -376,6 +533,81 @@ namespace Tietokantaa
             
         }
 
+        //Person classes
+        private void ShowAllPersons()
+        {
+            Console.Clear();
+            List<Person> persons = myApp.GetAllPersons();
+
+            if (persons.Count == 0)
+            {
+                Console.WriteLine("No persons in database.");
+                return;
+            }
+
+            foreach (Person p in persons)
+                Console.WriteLine($"{p.PersonId}: {p.Name} ({p.Role}) <{p.Email}>");
+        }
+
+        private void ShowOnePerson()
+        {
+            Console.Clear();
+            Console.Write("Enter name: ");
+            string name = Console.ReadLine();
+
+            Person p = myApp.GetPersonDataByName(name);
+            if (p == null)
+            {
+                Console.WriteLine("Person not found.");
+                return;
+            }
+
+            Console.WriteLine($"{p.PersonId}: {p.Name} ({p.Role}) <{p.Email}>");
+        }
+
+        private void AddPerson()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("PersonID (int): ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Name: ");
+                string name = Console.ReadLine();
+
+                Console.Write("Role: ");
+                string role = Console.ReadLine();
+
+                Console.Write("Email: ");
+                string email = Console.ReadLine();
+
+                myApp.AddPerson(id, name, role, email);
+                Console.WriteLine("Added.");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to add.");
+            }
+        }
+
+        private void RemovePerson()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("PersonID to remove: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                myApp.RemovePersonById(id);
+                Console.WriteLine("Removed (if existed).");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to remove.");
+            }
+        }
+
         public void Run()
         {
             ShowMenu();
@@ -394,6 +626,24 @@ namespace Tietokantaa
                         Console.Clear();
                         ShowOneCustomer();
                         break;
+                        
+                    //Person cases
+                    case "3":
+                        ShowAllPersons();
+                        break;
+    
+                    case "4":
+                        ShowOnePerson();
+                        break;
+    
+                    case "5":
+                        AddPerson();
+                        break;
+    
+                    case "6":
+                        RemovePerson();
+                        break;
+                        
                     case "exit":
                         Console.WriteLine("Press any key to close the program");
                         Console.ReadLine();
