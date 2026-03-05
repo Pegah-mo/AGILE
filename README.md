@@ -517,6 +517,42 @@ namespace Tietokantaa
             return myDataService.GetCustomerByName(custName);
         }
 
+        //Project CLasses
+        public List<Project> GetAllProjects()
+        {
+            return myDataService.GetAllProjects();
+        }
+
+        public Project GetProjectById(int id)
+        {
+            return myDataService.GetProjectById(id);
+        }
+
+        public void AddProject(int id, string name, string description,
+                               DateTime startDate, DateTime endDate)
+        {
+            myDataService.AddProject(id, name, description, startDate, endDate);
+        }
+
+        public void EditProject(int id, string name, string description,
+                                DateTime startDate, DateTime endDate)
+        {
+            myDataService.UpdateProject(id, name, description, startDate, endDate);
+        }
+
+        public void DeleteProject(int id)
+        {
+            myDataService.DeleteProject(id);
+        }
+
+        public string GetProjectReport(int id)
+        {
+            return myDataService.GetProjectReport(id);
+        }
+
+
+        //Person classes
+
         public List<Person> GetAllPersons()
         {
             return myDataService.GetAllPersons();
@@ -621,6 +657,166 @@ namespace Tietokantaa
             
         }
 
+
+
+        //Project classes
+
+        private void ShowAllProjects()
+        {
+            Console.Clear();
+            List<Project> projects = myApp.GetAllProjects();
+
+            if (projects.Count == 0)
+            {
+                Console.WriteLine("No projects in database.");
+                return;
+            }
+
+            foreach (Project p in projects)
+                Console.WriteLine($"{p.ProjectId}: {p.Name}  [{p.StartDate:dd.MM.yyyy} – {p.EndDate:dd.MM.yyyy}]");
+        }
+
+        private void ShowOneProject()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Enter project ID: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Project p = myApp.GetProjectById(id);
+                if (p == null)
+                {
+                    Console.WriteLine("Project not found.");
+                    return;
+                }
+                Console.WriteLine($"ID:          {p.ProjectId}");
+                Console.WriteLine($"Name:        {p.Name}");
+                Console.WriteLine($"Description: {p.Description}");
+                Console.WriteLine($"Start:       {p.StartDate:dd.MM.yyyy}");
+                Console.WriteLine($"End:         {p.EndDate:dd.MM.yyyy}");
+            }
+            catch
+            {
+                Console.WriteLine("Invalid input.");
+            }
+        }
+
+        private void AddProject()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Project ID (int): ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Name: ");
+                string name = Console.ReadLine();
+
+                Console.Write("Description: ");
+                string desc = Console.ReadLine();
+
+                Console.Write("Start date (dd.MM.yyyy): ");
+                DateTime start = DateTime.Parse(Console.ReadLine());
+
+                Console.Write("End date (dd.MM.yyyy): ");
+                DateTime end = DateTime.Parse(Console.ReadLine());
+
+                myApp.AddProject(id, name, desc, start, end);
+                Console.WriteLine("Project added.");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to add project. Check your input.");
+            }
+        }
+
+        private void EditProject()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Project ID to edit: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Project existing = myApp.GetProjectById(id);
+                if (existing == null)
+                {
+                    Console.WriteLine("Project not found.");
+                    return;
+                }
+
+                Console.Write($"New name [{existing.Name}]: ");
+                string name = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(name)) name = existing.Name;
+
+                Console.Write($"New description [{existing.Description}]: ");
+                string desc = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(desc)) desc = existing.Description;
+
+                Console.Write($"New start date [{existing.StartDate:dd.MM.yyyy}]: ");
+                string startStr = Console.ReadLine();
+                DateTime start = string.IsNullOrWhiteSpace(startStr)
+                                 ? existing.StartDate
+                                 : DateTime.Parse(startStr);
+
+                Console.Write($"New end date [{existing.EndDate:dd.MM.yyyy}]: ");
+                string endStr = Console.ReadLine();
+                DateTime end = string.IsNullOrWhiteSpace(endStr)
+                               ? existing.EndDate
+                               : DateTime.Parse(endStr);
+
+                myApp.EditProject(id, name, desc, start, end);
+                Console.WriteLine("Project updated.");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to edit project. Check your input.");
+            }
+        }
+
+        private void DeleteProject()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Project ID to delete: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Are you sure? This will also delete all stories and tasks (Y/N): ");
+                if (Console.ReadLine().Trim().ToUpper() != "Y")
+                {
+                    Console.WriteLine("Cancelled.");
+                    return;
+                }
+
+                myApp.DeleteProject(id);
+                Console.WriteLine("Project deleted.");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to delete project.");
+            }
+        }
+
+        private void ShowProjectReport()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Project ID: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+                Console.WriteLine(myApp.GetProjectReport(id));
+            }
+            catch
+            {
+                Console.WriteLine("Invalid input.");
+            }
+        }
+
+
+        
+
         //Person classes
         private void ShowAllPersons()
         {
@@ -714,6 +910,28 @@ namespace Tietokantaa
                         Console.Clear();
                         ShowOneCustomer();
                         break;
+
+                    //Project class
+
+                    case "7":
+                        ShowAllProjects();
+                        break;
+                    case "8":
+                        ShowOneProject();
+                        break;
+                    case "9":
+                        AddProject();
+                        break;
+                    case "10":
+                        EditProject();
+                        break;
+                    case "11":
+                        DeleteProject();
+                        break;
+                    case "12":
+                        ShowProjectReport();
+                        break;
+                        
                         
                     //Person cases
                     case "3":
