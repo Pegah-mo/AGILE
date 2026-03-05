@@ -88,6 +88,30 @@ namespace Tietokantaa
         }
     }
 
+    // Team Class
+    class Team
+    {
+       private int teamId;
+       private string name;
+       
+
+        public int TeamId    { get { return teamId; } }
+        public string Name   { get { return name; } }
+
+        public Team(int id, string nm)
+        {
+            teamId = id;
+            name   = nm;
+        }
+
+        public void AddTeam()    
+        public void RemoveTeam() 
+        public override string ToString() { return name; }
+    }
+
+
+
+
     //user story class
 
         class UserStory
@@ -484,6 +508,56 @@ namespace Tietokantaa
 
     }
 
+    // Team class
+    
+    public List<Team> GetAllTeams()
+        {
+            List<Team> list = new List<Team>();
+            string[] fields = { "teamId", "name" };
+            OleDbDataReader myReader = GetData(fields, "Team");
+
+            while (myReader.Read())
+            {
+                int    id = Convert.ToInt32(myReader["teamId"].ToString());
+                string nm = myReader["name"].ToString();
+                list.Add(new Team(id, nm));
+            }
+            return list;
+        }
+
+
+
+
+public Team GetTeamById(int teamId)
+        {
+            string[] fields = { "teamId", "name" };
+            OleDbDataReader myReader = GetDataWhereInt(fields, "Team", "teamId", teamId);
+
+            if (myReader.Read())
+            {
+                int    id = Convert.ToInt32(myReader["teamId"].ToString());
+                string nm = myReader["name"].ToString();
+                return new Team(id, nm);
+            }
+            return null;
+        }
+
+
+public void AddTeam(int id, string name)
+        {
+            string sql = "INSERT INTO Team (teamId, name) VALUES (" +
+                         id + ", '" + name + "');";
+            ExecuteNonQuery();
+        }
+
+              public void RemoveTeam(int teamId)
+        {
+            string sql = "DELETE FROM Team WHERE teamId = " + teamId + ";";
+            ExecuteNonQuery();
+        }
+
+
+
     class MyApplication
     {
         DataService myDataService;
@@ -572,6 +646,32 @@ namespace Tietokantaa
         {
             myDataService.RemovePerson(id);
         }
+
+        //Team Class
+
+        public List<Team> GetAllTeams()
+        {
+            return myDataService.GetAllTeams();
+        }
+
+        public Team GetTeamById(int id)
+        {
+            return myDataService.GetTeamById(id);
+ 
+       }
+
+        public void AddTeam(int id, string name)
+        {
+            myDataService.AddTeam(id, name);
+        }
+
+        public void RemoveTeamById(int id)
+        {
+            myDataService.RemoveTeam(id);
+        }
+    }
+
+
 
     }
 
@@ -892,6 +992,84 @@ namespace Tietokantaa
             }
         }
 
+        // Team Class
+
+        private void ShowAllTeams()
+        {
+            Console.Clear();
+            List<Team> teams = myApp.GetAllTeams();
+
+            if (teams.Count == 0)
+            {
+                Console.WriteLine("No teams in database.");
+                return;
+            }
+
+            foreach (Team t in teams)
+                Console.WriteLine($"{t.TeamId}: {t.Name}");
+        }
+
+        private void ShowOneTeam()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Enter team ID: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Team t = myApp.GetTeamById(id);
+                if (t == null)
+                {
+                    Console.WriteLine("Team not found.");
+                    return;
+                }
+                Console.WriteLine($"ID:   {t.TeamId}");
+                Console.WriteLine($"Name: {t.Name}");
+            }
+            catch
+            {
+                Console.WriteLine("Invalid input.");
+            }
+        }
+
+        private void AddTeam()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Team ID (int): ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                Console.Write("Name: ");
+                string name = Console.ReadLine();
+
+                myApp.AddTeam(id, name);
+                Console.WriteLine("Team added.");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to add team. Check your input.");
+            }
+        }
+
+        private void RemoveTeam()
+        {
+            Console.Clear();
+            try
+            {
+                Console.Write("Team ID to remove: ");
+                int id = Convert.ToInt32(Console.ReadLine());
+
+                myApp.RemoveTeamById(id);
+                Console.WriteLine("Team removed (if existed).");
+            }
+            catch
+            {
+                Console.WriteLine("Failed to remove team.");
+            }
+        }
+
+
         public void Run()
         {
             ShowMenu();
@@ -949,6 +1127,23 @@ namespace Tietokantaa
                     case "6":
                         RemovePerson();
                         break;
+
+
+                        //Team Class
+
+                         case "13":
+                         ShowAllTeams();
+                         break;
+                         case "14":
+                         ShowOneTeam();
+                         break;
+                         case "15":
+                         AddTeam();
+                         break;
+                         case "16":
+                         RemoveTeam();
+                         break;
+
                         
                     case "exit":
                         Console.WriteLine("Press any key to close the program");
