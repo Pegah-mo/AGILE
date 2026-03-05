@@ -10,7 +10,7 @@ using System.Data;
 namespace Tietokantaa
 {
 
-    public enum StoryState
+     public enum StoryState
     {
         ProjectBacklog,
         InSprint,
@@ -42,11 +42,7 @@ namespace Tietokantaa
             endDate     = end;
         }
 
-        public void AddProject()        
-        public void EditProject()       
-        public void DeleteProject()    
-        public void GetProjectReport() 
-
+        
         public override string ToString() { return name; }
     }
 
@@ -284,6 +280,119 @@ namespace Tietokantaa
             string sqlStory = "DELETE FROM UserStory WHERE storyId = " + storyId + ";";
             ExecuteNonQuery(sqlStory);
         }
+
+        //Project class
+
+         public List<Project> GetAllProjects()
+        {
+            List<Project> list = new List<Project>();
+            string[] fields = { "projectId", "name", "description", "startDate", "endDate" };
+            OleDbDataReader myReader = GetData(fields, "Project");
+
+            while (myReader.Read())
+            {
+                int      id    = Convert.ToInt32(myReader["projectId"].ToString());
+                string   nm    = myReader["name"].ToString();
+                string   desc  = myReader["description"].ToString();
+                DateTime start = Convert.ToDateTime(myReader["startDate"].ToString());
+                DateTime end   = Convert.ToDateTime(myReader["endDate"].ToString());
+                list.Add(new Project(id, nm, desc, start, end));
+            }
+            return list;
+        }
+
+
+        public Project GetProjectById(int projectId)
+        {
+            string[] fields = { "projectId", "name", "description", "startDate", "endDate" };
+            OleDbDataReader myReader = GetDataWhereInt(fields, "Project", "projectId", projectId);
+
+            if (myReader.Read())
+            {
+                int      id    = Convert.ToInt32(myReader["projectId"].ToString());
+                string   nm    = myReader["name"].ToString();
+                string   desc  = myReader["description"].ToString();
+                DateTime start = Convert.ToDateTime(myReader["startDate"].ToString());
+                DateTime end   = Convert.ToDateTime(myReader["endDate"].ToString());
+                return new Project(id, nm, desc, start, end);
+            }
+            return null;
+        }
+
+          public void AddProject(int id, string name, string description,
+                               DateTime startDate, DateTime endDate)
+        {
+            string sql = "INSERT INTO Project (projectId, name, description, startDate, endDate) VALUES (" +
+                         id + ", '" +
+                         name + "', '" +
+                         description + "', #" +
+                         startDate.ToString("MM/dd/yyyy") + "#, #" +
+                         endDate.ToString("MM/dd/yyyy") + "#);";
+            ExecuteNonQuery();
+        }
+
+        public void UpdateProject(int id, string name, string description,
+                                  DateTime startDate, DateTime endDate)
+        {
+            string sql = "UPDATE Project SET " +
+                         "name = '" + name + "', " +
+                         "description = '" + description + "', " +
+                         "startDate = #" + startDate.ToString("MM/dd/yyyy") + "#, " +
+                         "endDate = #" + endDate.ToString("MM/dd/yyyy") + "# " +
+                         "WHERE projectId = " + id + ";";
+            ExecuteNonQuery();
+        }
+
+         public void DeleteProject(int projectId)
+        {
+            
+            string sqlTasks = "DELETE FROM Task WHERE storyId IN " +
+                              "(SELECT storyId FROM UserStory WHERE projectId = " + projectId + ");";
+            ExecuteNonQuery();
+
+            
+            string sqlStories = "DELETE FROM UserStory WHERE projectId = " + projectId + ";";
+            ExecuteNonQuery();
+
+         
+            string sqlProject = "DELETE FROM Project WHERE projectId = " + projectId + ";";
+            ExecuteNonQuery();
+        }
+
+          public string GetProjectReport(int projectId)
+        {
+            Project p = GetProjectById(projectId);
+            if (p == null) return "Project not found.";
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("=== Project Report ===");
+            sb.AppendLine($"ID:          {p.ProjectId}");
+            sb.AppendLine($"Name:        {p.Name}");
+            sb.AppendLine($"Description: {p.Description}");
+            sb.AppendLine($"Start:       {p.StartDate:dd.MM.yyyy}");
+            sb.AppendLine($"End:         {p.EndDate:dd.MM.yyyy}");
+            sb.AppendLine();
+            sb.AppendLine("--- User Stories ---");
+
+            List<UserStory> stories = GetStoriesByProject(projectId);
+            if (stories.Count == 0)
+            {
+                sb.AppendLine("  (no stories)");
+            }
+            else
+            {
+                foreach (UserStory s in stories)
+                    sb.AppendLine($"  [{s.State}] (prio {s.Priority}) {s.Title}");
+            }
+            return sb.ToString();
+        }
+
+
+
+
+
+
+
        
         //Person classes
         public List<Person> GetAllPersons()
