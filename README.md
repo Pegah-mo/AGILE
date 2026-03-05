@@ -10,46 +10,11 @@ using System.Data;
 namespace Tietokantaa
 {
 
-    class Customer
+    public enum StoryState
     {
-        private int custID;
-        private string name;
-        private string area;
-        private double balance;
-
-        public string Name
-        {
-            get { return name; }
-        }
-
-        public string Area
-        {
-            get { return area; }
-        }
-
-        public int CustID
-        {
-            get { return custID; }
-        }
-
-        public double Balance
-        {
-            get { return balance; }
-        }
-
-        public Customer(int c, string nm, string ar, double bal)
-        {
-
-            custID = c;
-            name = nm;
-            area = ar;
-            balance = bal;
-        }
-
-        public override string ToString()
-        {
-            return name;
-        }
+        ProjectBacklog,
+        InSprint,
+        Done
     }
 
     //Person classes
@@ -91,6 +56,40 @@ namespace Tietokantaa
         public override string ToString()
         {
             return name;
+        }
+    }
+
+    //user story class
+
+        class UserStory
+    {
+        private int storyId;
+        private int projectId;
+        private string title;
+        private string description;
+        private int priority;
+        private StoryState state;
+
+        public int StoryId          { get { return storyId; } }
+        public int ProjectId        { get { return projectId; } }
+        public string Title         { get { return title; } }
+        public string Description   { get { return description; } }
+        public int Priority         { get { return priority; } }
+        public StoryState State     { get { return state; } }
+
+        public UserStory(int id, int projId, string ttl, string desc, int prio, StoryState st)
+        {
+            storyId     = id;
+            projectId   = projId;
+            title       = ttl;
+            description = desc;
+            priority    = prio;
+            state       = st;
+        }
+
+        public override string ToString()
+        {
+            return title;
         }
     }
 
@@ -198,114 +197,61 @@ namespace Tietokantaa
             return myReader;
         }
 
+        //methodes=======================================================================================================================
+        //userstory method========================
 
-        public Customer GetCustomerByName(string custName)
+        public List<UserStory> GetStoriesByProject(int projectId)
         {
-            Customer newCust = null;
-            string[] fields = { "CustID", "Name", "Balance", "Area" };
-            string table = "Customer";
+            List<UserStory> list = new List<UserStory>();
 
-            //Execute the SQL request command and
-            //store the output in myReader object
-            OleDbDataReader myReader;
-            myReader = GetDataWhereString(fields, table, "Name", custName);
-            //This method allows to control the reading of database response rows
-            bool notEoF;
-            //read first row from database
-            notEoF = myReader.Read();
-            //read row by row until the last row
-            while (notEoF) //continue reading if not yet all read
+            string[] fields = { "storyId", "projectId", "title", "description", "priority", "state" };
+            OleDbDataReader myReader = GetDataWhereInt(fields, "UserStory", "projectId", projectId);
+
+            while (myReader.Read())
             {
-                int custID = Convert.ToInt32(myReader["CustId"].ToString());
-                string name = myReader["Name"].ToString();
-                string area = myReader["Area"].ToString(); ;
-                double balance = Convert.ToDouble(myReader["Balance"].ToString()); ;
-                newCust = new Customer(custID, name, area, balance);
-                break;
-            }
-            return newCust;
-        }
+                int id      = Convert.ToInt32(myReader["storyId"].ToString());
+                int projId  = Convert.ToInt32(myReader["projectId"].ToString());
+                string title = myReader["title"].ToString();
+                string desc  = myReader["description"].ToString();
+                int prio    = Convert.ToInt32(myReader["priority"].ToString());
+                StoryState state = (StoryState)Convert.ToInt32(myReader["state"].ToString());
 
-        public List<Customer> GetAllCustomersWhere(string field, double min, double max)
-        {
-            List<Customer> custList = new List<Customer>();
-
-            OleDbCommand myCommand = new OleDbCommand();
-
-            string[] fields = { "CustID", "Name", "Balance", "Area" };
-            string table = "Customer";
-
-            //Execute the SQL request command and
-            //store the output in myReader object
-            OleDbDataReader myReader;
-            myReader = GetDataWhereBetween(fields, table, field, min, max);
-
-            //This method allows to control the reading of database response rows
-            bool notEoF;
-            //read first row from database
-            notEoF = myReader.Read();
-            //read row by row until the last row
-            while (notEoF) //continue reading if not yet all read
-            {
-                int custID = Convert.ToInt32(myReader["CustId"].ToString());
-                string name = myReader["Name"].ToString();
-                string area = myReader["Area"].ToString(); ;
-                double balance = Convert.ToDouble(myReader["Balance"].ToString()); ;
-
-                Customer newC = new Customer(custID, name, area, balance);
-
-                custList.Add(newC);
-
-                //output item on list box
-                //                Console.Write(myReader["name"].ToString() + ": ");
-                //                Console.WriteLine(myReader["CustId"].ToString());
-                //read next row
-                notEoF = myReader.Read();
+                list.Add(new UserStory(id, projId, title, desc, prio, state));
             }
 
-            return custList;
+            return list;
         }
 
-        public List<Customer> GetAllCustomers()
+        public void AddUserStory(int projectId, string title, string description, int priority)
         {
-            List<Customer> custList = new List<Customer>();
+                    (int)StoryState.ProjectBacklog = 0
+                    string sql = "INSERT INTO UserStory (projectId, title, description, priority, state) VALUES (" +
+                    projectId + ", '" +
+                    title + "', '" +
+                    description + "', " +
+                    priority + ", " +
+                    (int)StoryState.ProjectBacklog + ");";
 
-            OleDbCommand myCommand = new OleDbCommand();
-
-            string[] fields = { "CustID", "Name", "Balance", "Area" };
-            string table = "Customer";
-
-            //Execute the SQL request command and
-            //store the output in myReader object
-            OleDbDataReader myReader;
-            myReader = GetData(fields, table);
-
-            //This method allows to control the reading of database response rows
-            bool notEoF;
-            //read first row from database
-            notEoF = myReader.Read();
-            //read row by row until the last row
-            while (notEoF) //continue reading if not yet all read
-            {
-                int custID = Convert.ToInt32(myReader["CustId"].ToString());
-                string name = myReader["Name"].ToString();
-                string area = myReader["Area"].ToString(); ;
-                double balance = Convert.ToDouble(myReader["Balance"].ToString()); ;
-
-                Customer newC = new Customer(custID, name, area, balance);
-
-                custList.Add(newC);
-
-                //output item on list box
-                //                Console.Write(myReader["name"].ToString() + ": ");
-                //                Console.WriteLine(myReader["CustId"].ToString());
-                //read next row
-                notEoF = myReader.Read();
-            }
-
-            return custList;
+            ExecuteNonQuery(sql);
         }
 
+        public void UpdateStoryState(int storyId, StoryState newState)
+        {
+                    string sql = "UPDATE UserStory SET state = " +
+                    (int)newState +
+                    " WHERE storyId = " + storyId + ";";
+
+            ExecuteNonQuery(sql);
+        }
+
+        public void DeleteUserStory(int storyId)
+        {
+            string sqlTasks = "DELETE FROM Task WHERE storyId = " + storyId + ";";
+            ExecuteNonQuery(sqlTasks);
+            string sqlStory = "DELETE FROM UserStory WHERE storyId = " + storyId + ";";
+            ExecuteNonQuery(sqlStory);
+        }
+       
         //Person classes
         public List<Person> GetAllPersons()
         {
