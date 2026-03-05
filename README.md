@@ -17,6 +17,39 @@ namespace Tietokantaa
         Done
     }
 
+    //Project classes
+    class Project
+    {
+          private int projectId;
+          private string name;
+          private string description;
+          private DateTime startDate;
+          private DateTime endDate;
+       
+
+        public int ProjectId       { get { return projectId; } }
+        public string Name         { get { return name; } }
+        public string Description  { get { return description; } }
+        public DateTime StartDate  { get { return startDate; } }
+        public DateTime EndDate    { get { return endDate; } }
+
+        public Project(int id, string nm, string desc, DateTime start, DateTime end)
+        {
+            projectId   = id;
+            name        = nm;
+            description = desc;
+            startDate   = start;
+            endDate     = end;
+        }
+
+        public void AddProject()        
+        public void EditProject()       
+        public void DeleteProject()    
+        public void GetProjectReport() 
+
+        public override string ToString() { return name; }
+    }
+
     //Person classes
     public class Person
     {
