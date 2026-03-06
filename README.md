@@ -16,6 +16,12 @@ namespace Tietokantaa
         InSprint,
         Done
     }
+    public enum TaskState
+     {
+         ToBeDone,
+         InProcess,
+         Done
+     }
 
     //Project classes
     class Project
@@ -110,7 +116,44 @@ namespace Tietokantaa
     }
 
 
+     // Task class
+     public class Task
+     {
+         public int taskId;
+         public int storyId;
+         public string title;
+         public string description;
+         public int priority;
+         public TaskState state;
+         public string labels;
+         public string assignedPerson;
 
+        public int TaskId          { get { return taskId; } }
+        public int StoryId         { get { return storyId; } }
+        public string Title        { get { return title; } }
+        public string Description  { get { return description; } }
+        public int Priority        { get { return priority; } }
+        public TaskState State     { get { return state; } }
+        public string Labels       { get { return labels; } }
+        public string AssignedPerson { get { return assignedPerson; } }
+
+        public Task(int id, int stId, string ttl, string desc, int prio, TaskState st, string lbls, string person)
+        {
+            taskId = id;
+            storyId = stId;
+            title = ttl;
+            description = desc;
+            priority = prio;
+            state = st;
+            labels = lbls;
+            assignedPerson = person;
+        }
+
+        public override string ToString()
+        {
+            return title;
+        }
+     }
 
     //user story class
 
@@ -412,8 +455,59 @@ namespace Tietokantaa
         }
 
 
+     // Class "Task" methods:
 
+          // add method
+          public void AddTask(int id, int stId, string ttl, string desc, int prio, string lbls)
+                  {
+                      taskId = id;
+                      storyId = stId;
+                      title = ttl;
+                      description = desc;
+                      priority = prio;
+                      labels = lbls;
+                      state = TaskState.ToBeDone;
+                    Console.WriteLine("Task created successfully.");
+                  }
 
+          // updateTask method
+           public void UpdateTask(string newTitle, string newDescription, int newPriority)
+                  {
+                      title = newTitle;
+                      description = newDescription;
+                      priority = newPriority;
+                  }
+
+          // changeState method
+          public void ChangeState(TaskState newState)
+                  {
+                      state = newState;
+                  }
+                  
+          // assignPerson method
+           public void AssignPerson(string personName)
+                  {
+                      assignedPerson = personName;
+                  }
+
+          // removePerson method
+          public void RemovePerson()
+                  {
+                      assignedPerson = null;
+                  }
+
+          // getTaskReport method
+           public string GetTaskReport()
+                  {
+                      return "Task ID: " + taskId +
+                             ", Story ID: " + storyId +
+                             ", Title: " + title +
+                             ", Description: " + description +
+                             ", Priority: " + priority +
+                             ", State: " + state +
+                             ", Labels: " + labels +
+                             ", Assigned Person: " + assignedPerson;
+                  }
 
 
 
