@@ -212,16 +212,16 @@ namespace Tietokantaa
             myConnection.Open();
         }
 
-        public void CreateProjectTable()
+        public void CreateProjecttTable()
         {
             OleDbCommand myCommand = new OleDbCommand();
             myCommand.Connection = myConnection;
             myCommand.CommandText = "CREATE TABLE Project (" +
-                                    "projectId INTEGER , " +
-                                    "name TEXT , " +
-                                    "description TEXT , " +
-                                    "startDate DATETIME , " +
-                                    "endDate DATETIME) ";
+                                    "projectId AUTOINCREMENT PRIMARY KEY, " +
+                                    "name TEXT, " +
+                                    "description TEXT, " +
+                                    "startDate DATETIME, " +
+                                    "endDate DATETIME)";
             myCommand.CommandType = CommandType.Text;
             myCommand.ExecuteNonQuery();
             Console.WriteLine("Project table created successfully.");
@@ -466,17 +466,19 @@ namespace Tietokantaa
             return newProject;
         }
 
-        public void AddProject(int id, string name, string description,
-                     DateTime startDate, DateTime endDate)
+        public void AddProject(string name, string description,
+             DateTime startDate, DateTime endDate)
         {
             OleDbCommand myCommand = new OleDbCommand();
             myCommand.Connection = myConnection;
             myCommand.CommandText =
-                "INSERT INTO Project(projectId, name, description, startDate, endDate) VALUES (" +
-                id + ", '" + name + "', '" + description + "', #" +
-                startDate.ToString("MM/dd/yyyy") + "#, #" +
-                endDate.ToString("MM/dd/yyyy") + "#)";
+                "INSERT INTO Project(name, description, startDate, endDate) " +
+                "VALUES (@name, @description, @startDate, @endDate)";
             myCommand.CommandType = CommandType.Text;
+            myCommand.Parameters.AddWithValue("@name", name);
+            myCommand.Parameters.AddWithValue("@description", description);
+            myCommand.Parameters.AddWithValue("@startDate", startDate);
+            myCommand.Parameters.AddWithValue("@endDate", endDate);
             myCommand.ExecuteNonQuery();
         }
 
@@ -718,9 +720,10 @@ namespace Tietokantaa
             OleDbCommand myCommand = new OleDbCommand();
             myCommand.Connection = myConnection;
             myCommand.CommandText =
-                "INSERT INTO Team(teamId, name) VALUES (" +
-                id + ", '" + name + "')";
+                "INSERT INTO Team(teamId, name) VALUES (@teamId, @name)";
             myCommand.CommandType = CommandType.Text;
+            myCommand.Parameters.AddWithValue("@teamId", id);
+            myCommand.Parameters.AddWithValue("@name", name);
             myCommand.ExecuteNonQuery();
         }
 
@@ -745,9 +748,9 @@ class MyApplication
         myDataService = new DataService();
     }
 
-    public void CreateProjectTable()
+    public void CreateProjecttTable()
     {
-        myDataService.CreateProjectTable();
+        myDataService.CreateProjecttTable();
     }
 
     public void CreateTeamTable()
@@ -790,11 +793,10 @@ class MyApplication
         return myDataService.GetProjectById(id);
     }
 
-    public void AddProject(int id, string name, string description,
-                           DateTime startDate, DateTime endDate)
+    public void AddProject(string name, string description,
+                       DateTime startDate, DateTime endDate)
     {
-        
-        myDataService.AddProject(id, name, description, startDate, endDate);
+        myDataService.AddProject(name, description, startDate, endDate);
     }
 
     public void UpdateProject(int id, string name, string description,
@@ -1007,9 +1009,6 @@ class UI
         Console.Clear();
         try
         {
-            Console.Write("Project ID (int): ");
-            int id = Convert.ToInt32(Console.ReadLine());
-
             Console.Write("Name: ");
             string name = Console.ReadLine();
 
@@ -1022,7 +1021,7 @@ class UI
             Console.Write("End date (dd.MM.yyyy): ");
             DateTime end = DateTime.Parse(Console.ReadLine());
 
-            myApp.AddProject(id, name, desc, start, end);
+            myApp.AddProject(name, desc, start, end);
             Console.WriteLine("Project added.");
         }
         catch
@@ -1030,7 +1029,6 @@ class UI
             Console.WriteLine("Failed to add project. Check your input.");
         }
     }
-
 
     private void UpdateProject()
     {
@@ -1339,7 +1337,7 @@ class UI
 
                 case "17":
                     Console.Clear();
-                    myApp.CreateProjectTable();
+                    myApp.CreateProjecttTable();
                     break;
 
                 case "18":
