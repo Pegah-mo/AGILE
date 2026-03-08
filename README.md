@@ -12,15 +12,15 @@ namespace Tietokantaa
 
      public enum StoryState
     {
-        ProjectBacklog,
-        InSprint,
-        Done
+        ProjectBacklog = 0 ,
+        InSprint= 1,
+        Done= 2
     }
     public enum TaskState
      {
-         ToBeDone,
-         InProcess,
-         Done
+         ToBeDone= 0,
+         InProcess= 1,
+         Done=2
      }
 
     //Project classes
