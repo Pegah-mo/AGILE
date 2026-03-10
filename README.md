@@ -120,14 +120,14 @@ namespace Tietokantaa
     // Task class
     public class Task
     {
-        public int taskId;
-        public int storyId;
-        public string title;
-        public string description;
-        public int priority;
-        public TaskState state;
-        public string labels;
-        public string assignedPerson;
+        private int taskId;
+        private int storyId;
+        private string title;
+        private string description;
+        private int priority;
+        private TaskState state;
+        private string labels;
+        private string assignedPerson;
 
         public int TaskId { get { return taskId; } }
         public int StoryId { get { return storyId; } }
@@ -537,61 +537,120 @@ namespace Tietokantaa
         }*/
 
 
-        // Class "Task" methods:
+        // Class "Task" database methods:
+        
+            // addTask
+            public void AddTask(int storyId, string title, string description, int priority, string labels)
+                {
+                    OleDbCommand myCommand = new OleDbCommand();
+                
+                    myCommand.Connection = myConnection;
+                
+                    myCommand.CommandText =
+                        "INSERT INTO Task(storyId, title, description, priority, state, labels) VALUES (" +
+                        storyId + ", '" +
+                        title + "', '" +
+                        description + "', " +
+                        priority + ", 0, '" +
+                        labels + "')";
+                
+                    myCommand.CommandType = CommandType.Text;
+                
+                    myCommand.ExecuteNonQuery();
+                }
+                
+            // updateTask
+            public void UpdateTask(int taskId, string title, string description, int priority)
+                {
+                    OleDbCommand myCommand = new OleDbCommand();
+                
+                    myCommand.Connection = myConnection;
+                
+                    myCommand.CommandText =
+                        "UPDATE Task SET title='" + title +
+                        "', description='" + description +
+                        "', priority=" + priority +
+                        " WHERE taskId=" + taskId;
+                
+                    myCommand.CommandType = CommandType.Text;
+                
+                    myCommand.ExecuteNonQuery();
+                }
 
-        // add method
-        public void AddTask(int id, int stId, string ttl, string desc, int prio, string lbls)
-        {
-            taskId = id;
-            storyId = stId;
-            title = ttl;
-            description = desc;
-            priority = prio;
-            labels = lbls;
-            state = TaskState.ToBeDone;
-            Console.WriteLine("Task created successfully.");
-        }
+            // changeState
+            
+                public void ChangeTaskState(int taskId, TaskState newState)
+                    {
+                        OleDbCommand myCommand = new OleDbCommand();
+                    
+                        myCommand.Connection = myConnection;
+                    
+                        myCommand.CommandText =
+                            "UPDATE Task SET state=" + (int)newState +
+                            " WHERE taskId=" + taskId;
+                    
+                        myCommand.CommandType = CommandType.Text;
+                    
+                        myCommand.ExecuteNonQuery();
+                    }
 
-        // updateTask method
-        public void UpdateTask(string newTitle, string newDescription, int newPriority)
-        {
-            title = newTitle;
-            description = newDescription;
-            priority = newPriority;
-        }
+            // assignPerson
+            public void AssignPersonToTask(int taskId, string personName)
+                {
+                    OleDbCommand myCommand = new OleDbCommand();
+                
+                    myCommand.Connection = myConnection;
+                
+                    myCommand.CommandText =
+                        "UPDATE Task SET assignedPerson='" + personName +
+                        "' WHERE taskId=" + taskId;
+                
+                    myCommand.CommandType = CommandType.Text;
+                
+                    myCommand.ExecuteNonQuery();
+                }
 
-        // changeState method
-        public void ChangeState(TaskState newState)
-        {
-            state = newState;
-        }
+            // removePerson
+            public void RemovePersonFromTask(int taskId)
+                {
+                    OleDbCommand myCommand = new OleDbCommand();
+                
+                    myCommand.Connection = myConnection;
+                
+                    myCommand.CommandText =
+                        "UPDATE Task SET assignedPerson=NULL WHERE taskId=" + taskId;
+                
+                    myCommand.CommandType = CommandType.Text;
+                
+                    myCommand.ExecuteNonQuery();
+                }
 
-        // assignPerson method
-        public void AssignPerson(string personName)
-        {
-            assignedPerson = personName;
-        }
-
-        // removePerson method
-        public void RemovePerson()
-        {
-            assignedPerson = null;
-        }
-
-        // getTaskReport method
-        public string GetTaskReport()
-        {
-            return "Task ID: " + taskId +
-                   ", Story ID: " + storyId +
-                   ", Title: " + title +
-                   ", Description: " + description +
-                   ", Priority: " + priority +
-                   ", State: " + state +
-                   ", Labels: " + labels +
-                   ", Assigned Person: " + assignedPerson;
-        }
-
-
+            // getTaskReport
+            public Task GetTaskById(int taskId)
+                {
+                    Task newTask = null;
+                
+                    string[] fields = { "taskId","storyId","title","description","priority","state","labels","assignedPerson" };
+                
+                    OleDbDataReader myReader;
+                    myReader = GetDataWhereInt(fields,"Task","taskId",taskId);
+                
+                    if(myReader.Read())
+                    {
+                        int id = Convert.ToInt32(myReader["taskId"].ToString());
+                        int storyId = Convert.ToInt32(myReader["storyId"].ToString());
+                        string title = myReader["title"].ToString();
+                        string desc = myReader["description"].ToString();
+                        int prio = Convert.ToInt32(myReader["priority"].ToString());
+                        TaskState state = (TaskState)Convert.ToInt32(myReader["state"].ToString());
+                        string labels = myReader["labels"].ToString();
+                        string person = myReader["assignedPerson"].ToString();
+                
+                        newTask = new Task(id,storyId,title,desc,prio,state,labels,person);
+                    }
+                
+                    return newTask;
+                }
 
 
         //Person classes
@@ -834,6 +893,37 @@ namespace Tietokantaa
         myDataService.RemoveProject(id);
     }
 
+
+    // Task class
+        public void AddTask(int storyId,string title,string description,int priority,string labels)
+        {
+            myDataService.AddTask(storyId,title,description,priority,labels);
+        }
+        
+        public void UpdateTask(int taskId,string title,string description,int priority)
+        {
+            myDataService.UpdateTask(taskId,title,description,priority);
+        }
+        
+        public void ChangeTaskState(int taskId,TaskState newState)
+        {
+            myDataService.ChangeTaskState(taskId,newState);
+        }
+        
+        public void AssignPerson(int taskId,string person)
+        {
+            myDataService.AssignPersonToTask(taskId,person);
+        }
+        
+        public void RemovePerson(int taskId)
+        {
+            myDataService.RemovePersonFromTask(taskId);
+        }
+        
+        public Task GetTaskReport(int taskId)
+        {
+            return myDataService.GetTaskById(taskId);
+        }
 
     //Person classes
 
@@ -1131,7 +1221,30 @@ class UI
      }*/
 
 
-
+    // Task class
+        private void ShowTaskReport()
+    {
+        Console.Clear();
+    
+        Console.Write("Enter Task ID: ");
+        int id = Convert.ToInt32(Console.ReadLine());
+    
+        Task t = myApp.GetTaskReport(id);
+    
+        if(t==null)
+        {
+            Console.WriteLine("Task not found.");
+            return;
+        }
+    
+        Console.WriteLine("Task ID: " + t.TaskId);
+        Console.WriteLine("Title: " + t.Title);
+        Console.WriteLine("Description: " + t.Description);
+        Console.WriteLine("Priority: " + t.Priority);
+        Console.WriteLine("State: " + t.State);
+        Console.WriteLine("Labels: " + t.Labels);
+        Console.WriteLine("Assigned Person: " + t.AssignedPerson);
+    }
 
     //Person classes
     private void ShowAllPersons()
