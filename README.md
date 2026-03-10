@@ -543,33 +543,28 @@ namespace Tietokantaa
             return personList;
         }
         
-        public Person GetPersonByName(string personName)
-        {
-            Person newPerson = null;
-        
-            string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
-            string table = "Person";
-        
-            OleDbDataReader myReader;
-            myReader = GetDataWhereString(fields, table, "PersonName", personName);
-        
-            bool notEoF;
-            notEoF = myReader.Read();
-        
-            while (notEoF)
-            {
-                int id = Convert.ToInt32(myReader["PersonID"].ToString());
-                string name = myReader["PersonName"].ToString();
-                string role = myReader["PersonRole"].ToString();
-                string email = myReader["Email"].ToString();
-        
-                newPerson = new Person(id, name, role, email);
-        
-                break;
-            }
-        
-            return newPerson;
-        }
+     public Person GetPersonByName(string personName)
+     {
+         Person newPerson = null;
+     
+         string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
+         string table = "Person";
+     
+         OleDbDataReader myReader;
+         myReader = GetDataWhereString(fields, table, "PersonName", personName);
+     
+         if (myReader.Read())
+         {
+             int id = Convert.ToInt32(myReader["PersonID"].ToString());
+             string name = myReader["PersonName"].ToString();
+             string role = myReader["PersonRole"].ToString();
+             string email = myReader["Email"].ToString();
+     
+             newPerson = new Person(id, name, role, email);
+         }
+     
+         return newPerson;
+     }
         
         public void AddPerson(int id, string name, string role, string email)
         {
