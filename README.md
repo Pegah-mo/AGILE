@@ -190,6 +190,11 @@ namespace Tietokantaa
         }
     }
 
+
+
+//data serice class
+
+
     class DataService
     {
         private OleDbConnection myConnection;
@@ -235,9 +240,6 @@ namespace Tietokantaa
             myCommand.ExecuteNonQuery();
             Console.WriteLine("Team table created successfully.");
         }
-
-
-
 
         private OleDbDataReader GetData(string[] fields, string table)
         {
@@ -376,7 +378,7 @@ namespace Tietokantaa
 
         public void AddUserStory(int projectId, string title, string description, int priority)
         {
-            (int)StoryState.ProjectBacklog = 0
+            
                     string sql = "INSERT INTO UserStory (projectId, title, description, priority, state) VALUES (" +
                     projectId + ", '" +
                     title + "', '" +
@@ -597,7 +599,7 @@ namespace Tietokantaa
         {
             List<Person> personList = new List<Person>();
 
-            string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
+            string[] fields = { "personId", "personName", "PersonRole", "email", "stateId" };
             string table = "Person";
 
             OleDbDataReader myReader;
