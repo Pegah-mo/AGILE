@@ -690,16 +690,16 @@ namespace Tietokantaa
 
             return newPerson;
         }
-
-        public void AddPerson(int id, string name, string role, string email)
+        //Updated: remove id
+        public void AddPerson(string name, string role, string email)
         {
             OleDbCommand myCommand = new OleDbCommand();
 
             myCommand.Connection = myConnection;
 
+            //Updated: remove id
             myCommand.CommandText =
-                "INSERT INTO Person(PersonID, PersonName, PersonRole, Email) VALUES (" +
-                id + ", '" + name + "', '" + role + "', '" + email + "')";
+                "INSERT INTO Person(PersonName, PersonRole, Email) VALUES ('" + name + "', '" + role + "', '" + email + "')";
 
             myCommand.CommandType = CommandType.Text;
 
@@ -911,7 +911,7 @@ namespace Tietokantaa
 
     //Person classes
 
-    public List<Person> GetAllPersons()
+        public List<Person> GetAllPersons()
         {
             return myDataService.GetAllPersons();
         }
@@ -920,10 +920,10 @@ namespace Tietokantaa
         {
             return myDataService.GetPersonByName(personName);
         }
-
-        public void AddPerson(int id, string name, string role, string email)
+        //Updated: remove id
+        public void AddPerson(string name, string role, string email)
         {
-            myDataService.AddPerson(id, name, role, email);
+            myDataService.AddPerson(name, role, email);
         }
 
         public void RemovePersonById(int id)
