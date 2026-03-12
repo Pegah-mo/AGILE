@@ -325,6 +325,16 @@ namespace Tietokantaa
             return myReader;
         }
 
+
+        private void ExecuteNonQuery(string sql) //for update, insert, delete
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+            myCommand.Connection  = myConnection;
+            myCommand.CommandText = sql;
+            myCommand.CommandType = CommandType.Text;
+            myCommand.ExecuteNonQuery();
+        }
+
         //methodes=======================================================================================================================
         //userstory method========================
 
