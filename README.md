@@ -206,41 +206,15 @@ namespace Tietokantaa
             //page request, or separately every time db connection is required
             String connstr;
             //set the path here acording to the location of database folder
-            String projectPath = @"..\..\..\Data";
-            connstr = "Provider = Microsoft.ACE.OLEDB.12.0;" + @"Data Source = " +
-            projectPath + @"\CustomerOrders2019.accdb;";
+            String projectPath = @"D:\Desktop\Third semester\agile"; //Pegah Laptop
+            connstr = "Provider=Microsoft.ACE.OLEDB.12.0;" +
+                             @"Data Source=" + projectPath + @"\AgileDB-version-01.accdb;";
             //OleDbConnection requires namespace System.Data.OleDb
             myConnection = new OleDbConnection();
             myConnection.ConnectionString = connstr;
             myConnection.Open();
         }
-        public void CreateProjecttTable()
-        {
-            OleDbCommand myCommand = new OleDbCommand();
-            myCommand.Connection = myConnection;
-            myCommand.CommandText = "CREATE TABLE Project (" +
-                                    "projectId AUTOINCREMENT PRIMARY KEY, " +
-                                    "name TEXT, " +
-                                    "description TEXT, " +
-                                    "startDate DATETIME, " +
-                                    "endDate DATETIME)";
-            myCommand.CommandType = CommandType.Text;
-            myCommand.ExecuteNonQuery();
-            Console.WriteLine("Project table created successfully.");
-        }
-
-        public void CreateTeamTable()
-        {
-            OleDbCommand myCommand = new OleDbCommand();
-            myCommand.Connection = myConnection;
-            myCommand.CommandText = "CREATE TABLE Team (" +
-                                    "teamId INTEGER, " +
-                                    "name TEXT)";
-            myCommand.CommandType = CommandType.Text;
-            myCommand.ExecuteNonQuery();
-            Console.WriteLine("Team table created successfully.");
-        }
-
+       
         private OleDbDataReader GetData(string[] fields, string table)
         {
             OleDbCommand myCommand = new OleDbCommand();
