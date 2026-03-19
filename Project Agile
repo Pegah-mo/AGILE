@@ -6,7 +6,6 @@ using System.Data;
 using System.Data.OleDb;
 using System.Linq;
 using System.Reflection.Emit;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Tietokantaa;
@@ -15,15 +14,15 @@ namespace Tietokantaa
 
     public enum StoryState
     {
-        ProjectBacklog,
-        InSprint,
-        Done
+        ProjectBacklog = 0,
+        InSprint = 1,
+        Done = 2
     }
     public enum TaskState
     {
-        ToBeDone,
-        InProcess,
-        Done
+        ToBeDone = 0,
+        InProcess = 1,
+        Done = 2
     }
 
     //Project classes
@@ -121,14 +120,14 @@ namespace Tietokantaa
     // Task class
     public class Task
     {
-        public int taskId;
-        public int storyId;
-        public string title;
-        public string description;
-        public int priority;
-        public TaskState state;
-        public string labels;
-        public string assignedPerson;
+        private int taskId;
+        private int storyId;
+        private string title;
+        private string description;
+        private int priority;
+        private TaskState state;
+        private string labels;
+        private string assignedPerson;
 
         public int TaskId { get { return taskId; } }
         public int StoryId { get { return storyId; } }
@@ -191,10 +190,14 @@ namespace Tietokantaa
         }
     }
 
+
+
+    //data serice class
+
+
     class DataService
     {
         private OleDbConnection myConnection;
-
 
         public DataService()
         {
@@ -203,40 +206,13 @@ namespace Tietokantaa
             //page request, or separately every time db connection is required
             String connstr;
             //set the path here acording to the location of database folder
-            String projectPath = @"..\..\..\AgileData";
-            connstr = "Provider = Microsoft.ACE.OLEDB.12.0;" + @"Data Source = " +
-            projectPath + @"\Project Agile.accdb;";
+            String projectPath = @"D:\Desktop\Third semester\agile"; //Pegah Laptop
+            connstr = "Provider=Microsoft.ACE.OLEDB.12.0;" +
+                             @"Data Source=" + projectPath + @"\AgileDB-version-01.accdb;";
             //OleDbConnection requires namespace System.Data.OleDb
             myConnection = new OleDbConnection();
             myConnection.ConnectionString = connstr;
             myConnection.Open();
-        }
-
-        public void CreateProjecttTable()
-        {
-            OleDbCommand myCommand = new OleDbCommand();
-            myCommand.Connection = myConnection;
-            myCommand.CommandText = "CREATE TABLE Project (" +
-                                    "projectId AUTOINCREMENT PRIMARY KEY, " +
-                                    "name TEXT, " +
-                                    "description TEXT, " +
-                                    "startDate DATETIME, " +
-                                    "endDate DATETIME)";
-            myCommand.CommandType = CommandType.Text;
-            myCommand.ExecuteNonQuery();
-            Console.WriteLine("Project table created successfully.");
-        }
-
-        public void CreateTeamTable()
-        {
-            OleDbCommand myCommand = new OleDbCommand();
-            myCommand.Connection = myConnection;
-            myCommand.CommandText = "CREATE TABLE Team (" +
-                                    "teamId INTEGER, " +
-                                    "name TEXT)";
-            myCommand.CommandType = CommandType.Text;
-            myCommand.ExecuteNonQuery();
-            Console.WriteLine("Team table created successfully.");
         }
 
         private OleDbDataReader GetData(string[] fields, string table)
@@ -292,8 +268,9 @@ namespace Tietokantaa
 
             return myReader;
         }
+
         private OleDbDataReader GetDataWhereInt(string[] fields, string table,
-                                               string keyField, int keyValue)
+                                              string keyField, int keyValue)
         {
             OleDbCommand myCommand = new OleDbCommand();
 
@@ -348,6 +325,16 @@ namespace Tietokantaa
             return myReader;
         }
 
+
+        private void ExecuteNonQuery(string sql) //for update, insert, delete
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+            myCommand.Connection = myConnection;
+            myCommand.CommandText = sql;
+            myCommand.CommandType = CommandType.Text;
+            myCommand.ExecuteNonQuery();
+        }
+
         //methodes=======================================================================================================================
         //userstory method========================
 
@@ -373,37 +360,35 @@ namespace Tietokantaa
             return list;
         }
 
+        public void AddUserStory(int projectId, string title, string description, int priority)
+        {
 
-        /* public void AddUserStory(int projectId, string title, string description, int priority)
-         {
-             (int)StoryState.ProjectBacklog = 0
-                     string sql = "INSERT INTO UserStory (projectId, title, description, priority, state) VALUES (" +
-                     projectId + ", '" +
-                     title + "', '" +
-                     description + "', " +
-                     priority + ", " +
-                     (int)StoryState.ProjectBacklog + ");";
+            string sql = "INSERT INTO UserStory (projectId, title, description, priority, state) VALUES (" +
+            projectId + ", '" +
+            title + "', '" +
+            description + "', " +
+            priority + ", " +
+            (int)StoryState.ProjectBacklog + ");";
 
-             ExecuteNonQuery(sql);
-         }
+            ExecuteNonQuery(sql);
+        }
 
-         public void UpdateStoryState(int storyId, StoryState newState)
-         {
-             string sql = "UPDATE UserStory SET state = " +
-             (int)newState +
-             " WHERE storyId = " + storyId + ";";
+        public void UpdateStoryState(int storyId, StoryState newState)
+        {
+            string sql = "UPDATE UserStory SET state = " +
+            (int)newState +
+            " WHERE storyId = " + storyId + ";";
 
-             ExecuteNonQuery(sql);
-         }
+            ExecuteNonQuery(sql);
+        }
 
-         public void DeleteUserStory(int storyId)
-         {
-             string sqlTasks = "DELETE FROM Task WHERE storyId = " + storyId + ";";
-             ExecuteNonQuery(sqlTasks);
-             string sqlStory = "DELETE FROM UserStory WHERE storyId = " + storyId + ";";
-             ExecuteNonQuery(sqlStory);
-         }*/
-
+        public void DeleteUserStory(int storyId)
+        {
+            string sqlTasks = "DELETE FROM Task WHERE storyId = " + storyId + ";";
+            ExecuteNonQuery(sqlTasks);
+            string sqlStory = "DELETE FROM UserStory WHERE storyId = " + storyId + ";";
+            ExecuteNonQuery(sqlStory);
+        }
 
         //Project class
 
@@ -467,7 +452,7 @@ namespace Tietokantaa
         }
 
         public void AddProject(string name, string description,
-             DateTime startDate, DateTime endDate)
+            DateTime startDate, DateTime endDate)
         {
             OleDbCommand myCommand = new OleDbCommand();
             myCommand.Connection = myConnection;
@@ -483,7 +468,7 @@ namespace Tietokantaa
         }
 
         public void UpdateProject(int id, string name, string description,
-                                   DateTime startDate, DateTime endDate)
+                                  DateTime startDate, DateTime endDate)
         {
             OleDbCommand myCommand = new OleDbCommand();
             myCommand.Connection = myConnection;
@@ -507,64 +492,149 @@ namespace Tietokantaa
             myCommand.ExecuteNonQuery();
         }
 
+        /*public string GetProjectReport(int projectId)
+        {
+            Project p = GetProjectById(projectId);
+            if (p == null) return "Project not found.";
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("=== Project Report ===");
+            sb.AppendLine($"ID:          {p.ProjectId}");
+            sb.AppendLine($"Name:        {p.Name}");
+            sb.AppendLine($"Description: {p.Description}");
+            sb.AppendLine($"Start:       {p.StartDate:dd.MM.yyyy}");
+            sb.AppendLine($"End:         {p.EndDate:dd.MM.yyyy}");
+            sb.AppendLine();
+            sb.AppendLine("--- User Stories ---");
+
+            List<UserStory> stories = GetStoriesByProject(projectId);
+            if (stories.Count == 0)
+            {
+                sb.AppendLine("  (no stories)");
+            }
+            else
+            {
+                foreach (UserStory s in stories)
+                    sb.AppendLine($"  [{s.State}] (prio {s.Priority}) {s.Title}");
+            }
+            return sb.ToString();
+        }*/
 
 
+        // Class "Task" database methods:
 
-        // Class "Task" methods:
+        // addTask
+        public void AddTask(int storyId, string title, string description, int priority, string labels)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
 
-        // add method
-        /* public void AddTask(int id, int stId, string ttl, string desc, int prio, string lbls)
-         {
-             taskId = id;
-             storyId = stId;
-             title = ttl;
-             description = desc;
-             priority = prio;
-             labels = lbls;
-             state = TaskState.ToBeDone;
-             Console.WriteLine("Task created successfully.");
-         }
+            myCommand.Connection = myConnection;
 
-         // updateTask method
-         public void UpdateTask(string newTitle, string newDescription, int newPriority)
-         {
-             title = newTitle;
-             description = newDescription;
-             priority = newPriority;
-         }
+            myCommand.CommandText =
+                "INSERT INTO Task(storyId, title, description, priority, state, labels) VALUES (" +
+                storyId + ", '" +
+                title + "', '" +
+                description + "', " +
+                priority + ", 0, '" +
+                labels + "')";
 
-         // changeState method
-         public void ChangeState(TaskState newState)
-         {
-             state = newState;
-         }
+            myCommand.CommandType = CommandType.Text;
 
-         // assignPerson method
-         public void AssignPerson(string personName)
-         {
-             assignedPerson = personName;
-         }
+            myCommand.ExecuteNonQuery();
+        }
 
-         // removePerson method
-         public void RemovePerson()
-         {
-             assignedPerson = null;
-         }
+        // updateTask
+        public void UpdateTask(int taskId, string title, string description, int priority)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
 
-         // getTaskReport method
-         public string GetTaskReport()
-         {
-             return "Task ID: " + taskId +
-                    ", Story ID: " + storyId +
-                    ", Title: " + title +
-                    ", Description: " + description +
-                    ", Priority: " + priority +
-                    ", State: " + state +
-                    ", Labels: " + labels +
-                    ", Assigned Person: " + assignedPerson;
-         }*/
+            myCommand.Connection = myConnection;
 
+            myCommand.CommandText =
+                "UPDATE Task SET title='" + title +
+                "', description='" + description +
+                "', priority=" + priority +
+                " WHERE taskId=" + taskId;
 
+            myCommand.CommandType = CommandType.Text;
+
+            myCommand.ExecuteNonQuery();
+        }
+
+        // changeState
+
+        public void ChangeTaskState(int taskId, TaskState newState)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+
+            myCommand.Connection = myConnection;
+
+            myCommand.CommandText =
+                "UPDATE Task SET state=" + (int)newState +
+                " WHERE taskId=" + taskId;
+
+            myCommand.CommandType = CommandType.Text;
+
+            myCommand.ExecuteNonQuery();
+        }
+
+        // assignPerson
+        public void AssignPersonToTask(int taskId, string personName)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+
+            myCommand.Connection = myConnection;
+
+            myCommand.CommandText =
+                "UPDATE Task SET assignedPerson='" + personName +
+                "' WHERE taskId=" + taskId;
+
+            myCommand.CommandType = CommandType.Text;
+
+            myCommand.ExecuteNonQuery();
+        }
+
+        // removePerson
+        public void RemovePersonFromTask(int taskId)
+        {
+            OleDbCommand myCommand = new OleDbCommand();
+
+            myCommand.Connection = myConnection;
+
+            myCommand.CommandText =
+                "UPDATE Task SET assignedPerson=NULL WHERE taskId=" + taskId;
+
+            myCommand.CommandType = CommandType.Text;
+
+            myCommand.ExecuteNonQuery();
+        }
+
+        // getTaskReport
+        public Task GetTaskById(int taskId)
+        {
+            Task newTask = null;
+
+            string[] fields = { "taskId", "storyId", "title", "description", "priority", "state", "labels", "assignedPerson" };
+
+            OleDbDataReader myReader;
+            myReader = GetDataWhereInt(fields, "Task", "taskId", taskId);
+
+            if (myReader.Read())
+            {
+                int id = Convert.ToInt32(myReader["taskId"].ToString());
+                int storyId = Convert.ToInt32(myReader["storyId"].ToString());
+                string title = myReader["title"].ToString();
+                string desc = myReader["description"].ToString();
+                int prio = Convert.ToInt32(myReader["priority"].ToString());
+                TaskState state = (TaskState)Convert.ToInt32(myReader["state"].ToString());
+                string labels = myReader["labels"].ToString();
+                string person = myReader["assignedPerson"].ToString();
+
+                newTask = new Task(id, storyId, title, desc, prio, state, labels, person);
+            }
+
+            return newTask;
+        }
 
 
         //Person classes
@@ -572,7 +642,7 @@ namespace Tietokantaa
         {
             List<Person> personList = new List<Person>();
 
-            string[] fields = { "PersonID", "PersonName", "PersonRole", "Email" };
+            string[] fields = { "personId", "personName", "PersonRole", "email", "stateId" };
             string table = "Person";
 
             OleDbDataReader myReader;
@@ -608,10 +678,7 @@ namespace Tietokantaa
             OleDbDataReader myReader;
             myReader = GetDataWhereString(fields, table, "PersonName", personName);
 
-            bool notEoF;
-            notEoF = myReader.Read();
-
-            while (notEoF)
+            if (myReader.Read())
             {
                 int id = Convert.ToInt32(myReader["PersonID"].ToString());
                 string name = myReader["PersonName"].ToString();
@@ -619,22 +686,20 @@ namespace Tietokantaa
                 string email = myReader["Email"].ToString();
 
                 newPerson = new Person(id, name, role, email);
-
-                break;
             }
 
             return newPerson;
         }
-
-        public void AddPerson(int id, string name, string role, string email)
+        //Updated: remove id
+        public void AddPerson(string name, string role, string email)
         {
             OleDbCommand myCommand = new OleDbCommand();
 
             myCommand.Connection = myConnection;
 
+            //Updated: remove id
             myCommand.CommandText =
-                "INSERT INTO Person(PersonID, PersonName, PersonRole, Email) VALUES (" +
-                id + ", '" + name + "', '" + role + "', '" + email + "')";
+                "INSERT INTO Person(PersonName, PersonRole, Email) VALUES ('" + name + "', '" + role + "', '" + email + "')";
 
             myCommand.CommandType = CommandType.Text;
 
@@ -739,6 +804,7 @@ namespace Tietokantaa
 }
 
 
+
 class MyApplication
 {
     DataService myDataService;
@@ -748,7 +814,7 @@ class MyApplication
         myDataService = new DataService();
     }
 
-    public void CreateProjecttTable()
+   /*public void CreateProjecttTable()
     {
         myDataService.CreateProjecttTable();
     }
@@ -756,32 +822,33 @@ class MyApplication
     public void CreateTeamTable()
     {
         myDataService.CreateTeamTable();
-    }
-
-    /*public string GetAllCustomers()
-    {
-        string customers = "";
-        foreach (Customer c in myDataService.GetAllCustomers())
-            customers += c.ToString() + "\n";
-        customers = customers.Remove(customers.LastIndexOf('\n'));
-        return customers;
-    }
-
-    public string GetCustomersByBalance(double min, double max)
-    {
-        string customers = "";
-        foreach (Customer c in myDataService.GetAllCustomersWhere("Balance", min, max))
-            customers += c.ToString() + "\n";
-        customers = customers.Remove(customers.LastIndexOf('\n'));
-        return customers;
-    }
-
-
-    public Customer GetCustomerDataByName(string custName)
-    {
-        return myDataService.GetCustomerByName(custName);
     }*/
 
+    /*
+   public string GetAllCustomers()
+      {
+          string customers = "";
+          foreach (Customer c in myDataService.GetAllCustomers())
+              customers += c.ToString() + "\n";
+          customers = customers.Remove(customers.LastIndexOf('\n'));
+          return customers;
+      }
+
+      public string GetCustomersByBalance(double min, double max)
+      {
+          string customers = "";
+          foreach (Customer c in myDataService.GetAllCustomersWhere("Balance", min, max))
+              customers += c.ToString() + "\n";
+          customers = customers.Remove(customers.LastIndexOf('\n'));
+          return customers;
+      }
+
+
+      public Customer GetCustomerDataByName(string custName)
+      {
+          return myDataService.GetCustomerByName(custName);
+      }
+       */
     //Project CLasses
     public List<Project> GetAllProjects()
     {
@@ -811,6 +878,36 @@ class MyApplication
     }
 
 
+    // Task class
+    public void AddTask(int storyId, string title, string description, int priority, string labels)
+    {
+        myDataService.AddTask(storyId, title, description, priority, labels);
+    }
+
+    public void UpdateTask(int taskId, string title, string description, int priority)
+    {
+        myDataService.UpdateTask(taskId, title, description, priority);
+    }
+
+    public void ChangeTaskState(int taskId, TaskState newState)
+    {
+        myDataService.ChangeTaskState(taskId, newState);
+    }
+
+    public void AssignPerson(int taskId, string person)
+    {
+        myDataService.AssignPersonToTask(taskId, person);
+    }
+
+    public void RemovePerson(int taskId)
+    {
+        myDataService.RemovePersonFromTask(taskId);
+    }
+
+    public Task GetTaskReport(int taskId)
+    {
+        return myDataService.GetTaskById(taskId);
+    }
 
     //Person classes
 
@@ -823,10 +920,10 @@ class MyApplication
     {
         return myDataService.GetPersonByName(personName);
     }
-
-    public void AddPerson(int id, string name, string role, string email)
+    //Updated: remove id
+    public void AddPerson(string name, string role, string email)
     {
-        myDataService.AddPerson(id, name, role, email);
+        myDataService.AddPerson(name, role, email);
     }
 
     public void RemovePersonById(int id)
@@ -878,6 +975,7 @@ class UI
         Console.WriteLine("5. add person");
         Console.WriteLine("6. remove person (by id)");
 
+
         //Project menu
         Console.WriteLine("7.  Show all projects");
         Console.WriteLine("8.  Show one project (by ID)");
@@ -902,61 +1000,61 @@ class UI
             Console.WriteLine((i + 1) + ": " + stringList[i]);
     }
 
-    /* private void ShowOneCustomer()
-     {
-         bool goOn = true, success;
-         int custNr;
-         while (goOn)
-         {
-             Console.Clear();
-             string[] customers = myApp.GetAllCustomers().Split('\n');
-             Console.WriteLine("Enter the customer number you want to see:");
+    /*private void ShowOneCustomer()
+    {
+        bool goOn = true, success;
+        int custNr;
+        while (goOn)
+        {
+            Console.Clear();
+            string[] customers = myApp.GetAllCustomers().Split('\n');
+            Console.WriteLine("Enter the customer number you want to see:");
 
-             if (customers == null || customers.Length == 0)
-             {
-                 Console.WriteLine("No customers available in the database");
-                 break;
-             }
-             else
-             {
-                 success = false;
-                 //Customer list
-                 while (!success)
-                 {
-                     //Show customer list
-                     ShowListEnumerated(customers);
-                     Console.WriteLine("Enter customer number:");
-                     try
-                     {
-                         custNr = Convert.ToInt32(Console.ReadLine());
-                         if (custNr < 1 || custNr > customers.Length)
-                         {
-                             throw new Exception("Invalid customer number: You can only select from the listed customer numbers");
-                         }
+            if (customers == null || customers.Length == 0)
+            {
+                Console.WriteLine("No customers available in the database");
+                break;
+            }
+            else
+            {
+                success = false;
+                //Customer list
+                while (!success)
+                {
+                    //Show customer list
+                    ShowListEnumerated(customers);
+                    Console.WriteLine("Enter customer number:");
+                    try
+                    {
+                        custNr = Convert.ToInt32(Console.ReadLine());
+                        if (custNr < 1 || custNr > customers.Length)
+                        {
+                            throw new Exception("Invalid customer number: You can only select from the listed customer numbers");
+                        }
 
-                         Customer cust = myApp.GetCustomerDataByName(customers[custNr - 1]);
-                         if (cust == null)
-                         {
-                             throw new Exception("Invalid customer data");
-                         }
-                         Console.WriteLine(cust.Name + ": " + cust.CustID + ", " + cust.Area);
-                         success = true;
-                     }
-                     catch
-                     {
-                         Console.WriteLine("Invalid customer number: You can only select from the listed customer numbers 1 - " + customers.Length);
-                     }
-                 }
+                        Customer cust = myApp.GetCustomerDataByName(customers[custNr - 1]);
+                        if (cust == null)
+                        {
+                            throw new Exception("Invalid customer data");
+                        }
+                        Console.WriteLine(cust.Name + ": " + cust.CustID + ", " + cust.Area);
+                        success = true;
+                    }
+                    catch
+                    {
+                        Console.WriteLine("Invalid customer number: You can only select from the listed customer numbers 1 - " + customers.Length);
+                    }
+                }
 
-             }
+            }
 
-             Console.WriteLine("Want to see another customer data (Y/N)?");
-             if (Console.ReadLine() != "Y")
-                 goOn = false;
-             Console.WriteLine();
-         }
+            Console.WriteLine("Want to see another customer data (Y/N)?");
+            if (Console.ReadLine() != "Y")
+                goOn = false;
+            Console.WriteLine();
+        }
 
-     }*/
+    }*/
 
 
 
@@ -1092,22 +1190,45 @@ class UI
     }
 
     /*private void ShowProjectReport()
+     {
+         Console.Clear();
+         try
+         {
+             Console.Write("Project ID: ");
+             int id = Convert.ToInt32(Console.ReadLine());
+             Console.WriteLine(myApp.GetProjectReport(id));
+         }
+         catch
+         {
+             Console.WriteLine("Invalid input.");
+         }
+     }*/
+
+
+    // Task class
+    private void ShowTaskReport()
     {
         Console.Clear();
-        try
+
+        Console.Write("Enter Task ID: ");
+        int id = Convert.ToInt32(Console.ReadLine());
+
+        Task t = myApp.GetTaskReport(id);
+
+        if (t == null)
         {
-            Console.Write("Project ID: ");
-            int id = Convert.ToInt32(Console.ReadLine());
-            Console.WriteLine(myApp.GetProjectReport(id));
+            Console.WriteLine("Task not found.");
+            return;
         }
-        catch
-        {
-            Console.WriteLine("Invalid input.");
-        }
-    }*/
 
-
-
+        Console.WriteLine("Task ID: " + t.TaskId);
+        Console.WriteLine("Title: " + t.Title);
+        Console.WriteLine("Description: " + t.Description);
+        Console.WriteLine("Priority: " + t.Priority);
+        Console.WriteLine("State: " + t.State);
+        Console.WriteLine("Labels: " + t.Labels);
+        Console.WriteLine("Assigned Person: " + t.AssignedPerson);
+    }
 
     //Person classes
     private void ShowAllPersons()
@@ -1262,6 +1383,7 @@ class UI
         }
     }
 
+
     public void Run()
     {
         ShowMenu();
@@ -1279,8 +1401,9 @@ class UI
                 case "2":
                     Console.Clear();
                     ShowOneCustomer();
-                    break;
-                */
+                    break; */
+
+                //Project class
 
                 //Project class
 
@@ -1301,7 +1424,6 @@ class UI
                     break;
 
 
-
                 //Person cases
                 case "3":
                     ShowAllPersons();
@@ -1320,6 +1442,7 @@ class UI
                     break;
 
 
+
                 //Team Class
 
                 case "12":
@@ -1335,15 +1458,8 @@ class UI
                     RemoveTeam();
                     break;
 
-                case "17":
-                    Console.Clear();
-                    myApp.CreateProjecttTable();
-                    break;
+             
 
-                case "18":
-                    Console.Clear();
-                    myApp.CreateTeamTable();
-                    break;
 
 
                 case "exit":
